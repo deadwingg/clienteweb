@@ -138,15 +138,27 @@
 
             }
 
-            let arrCursos = [];
-
             function traerCursosColocarlosEnSelect() {
-                // [{"nombre":"3c12e417-848a-42db-9898-cfd148fa8302","id":"Curso de Liderazgo"},{"nombre":"30bf7fb2-c315-4f45-9d20-580091b73fa2","id":"Java Web Ninja"}]
                 let url = 'curso';
                 fetch(url)
                 .then(response => response.json())
-                .then(arrCrs => { console.log(arrCrs); arrCursos = arrCrs; });
+                .then(arrCrs => { console.log(arrCrs); 
+                    let strOpt = '{{#arr}}<option value="{{nombre}}">{{id}}</option>{{/arr}}">';
+                    let resHTML = Mustache.render(strOpt, { arr: arrCrs});
+                    console.log(resHTML);
+                    $('#selCursos').children().detach();
+                    $('#selCursos').append(resHTML);
+                });
             }
+
+            function traerUsuariosColocarEnLosSelect() {
+
+            }
+
+            _.delay( z => {
+                traerCursosColocarlosEnSelect();
+                traerUsuariosColocarEnLosSelect();
+            }, 100);
 
         </script>
 
