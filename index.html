@@ -59,70 +59,77 @@
                     <div class="col-md-3">
                         <select class="custom-select" id="selCursos">
                             <option selected>Choose...</option>
-                            <option value="1">curso1</option>
-                            <option value="2">curso2</option>
-                            <option value="3">curso3</option>
+
                           </select>
                     </div>
                     <div class="col-md-3">
                         <select class="custom-select" id="selUsuarios">
                             <option selected>Usuarios</option>
-                            <option value="1">Usuario1</option>
-                            <option value="2">Usuario2</option>
-                            <option value="3">Usuario3</option>
+
                           </select>
                     </div>
                     <div class="col-md-1">
                         <button id="agregarUsuarioCurso" 
                             type="button" class="btn btn-success">Agregar</button>
                     </div>
-                    <div class="col-md-1">
-                        <button id="borrarUsuarioCurso" 
-                            type="button" class="btn btn-danger">Borrar</button>
-                    </div>
-                    <div class="col-md-7">
+                    <div class="col-md-8">
                     </div>
                 </div>
                 <div class="row mb-5">
 
                 </div>
-                <div class="row">
+                <div id="reemplazar" class="row">
                     <div class="col-md-12">
-                        <table class="table">
+                        <table id="tablaInscripciones" class="table">
                             <thead>
                               <tr>
-                                <th scope="col">#</th>
+                                <th scope="col">id de curso</th>
                                 <th scope="col">Curso</th>
                                 <th scope="col">Alumno</th>
+                                <th scope="col">Borrar</th>
                               </tr>
                             </thead>
-                            <tbody>
-                              <tr>
-                                <th scope="row">1</th>
-                                <td>Mark</td>
-                                <td>Otto</td>
-                              </tr>
-                              <tr>
-                                <th scope="row">2</th>
-                                <td>Jacob</td>
-                                <td>Thornton<
-                              </tr>
-                              <tr>
-                                <th scope="row">3</th>
-                                <td>Larry</td>
-                                <td>the Bird</td>
-                              </tr>
+                            <tbody id="cuerpoDeLaTabla">
+
                             </tbody>
                           </table>
                     </div>
                 </div>
             </div>          
-        </main>    
+        </main>
+
+        <template id="mjs-tablerows">
+            {{#arr}} <tr>
+            <td>{{idInscripcion}}</td>'
+            <td>{{nombreCurso}}</td>
+            <td>{{nombreUsuario}}</td>
+            <th scope="col">
+                <button id="cuarto" type="button" data-idIn="{{idInscripcion}}"
+                        class="btn btn-danger js-borrar">Borrar</button>
+            </th>
+        </tr>
+            {{/arr}}
+        </template>
+
+        <template id="mjs-usuario">
+            {{#arr}}<option value="{{id}}">{{nombre}}</option>{{/arr}}">
+        </template>
+
+        <template id="mjs-curso">
+            {{#arr}}<option value="{{id}}">{{nombre}}</option>{{/arr}}">
+        </template>
+
         <script src="js/jquery-3.4.1.slim.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.1.0/mustache.js"></script>
         
+        <script id="pepaPig" type="template/mustache">
+            <h1>ESTE ES EL TEMPLATE NUEVO</h1>
+        </script>
+
+
         <script>
+            const RELOAD_TIME = 300;
             $(document).on('click', '#agregarUsuarioCurso', function(e) {
                 console.log(document.getElementById("selCursos").value);
                 console.log(document.getElementById("selUsuarios").value);
@@ -130,12 +137,34 @@
                 let idUsuario = document.getElementById("selUsuarios").value;
                 asociarUsuarioCurso(idUsuario, idCurso);
             });
-            $(document).on('click', '#borrarUsuarioCurso', function(e) {
-                alert('tomar los elementos seleccionados y invocar al post');
+            $(document).on('click', '.js-borrar', function(e) {
+                borrarInscripcion(e.target.getAttribute('data-idIn'));
             });
 
             function asociarUsuarioCurso(idUsuario, idCurso) {
-
+                fetch('inscripciones', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        curso : idCurso,
+                        usuario : idUsuario
+                    })
+                })
+                .then(function(response) {
+                    if(response.ok) {
+                        return response.text()
+                    } else {
+                        throw "Error en la llamada Ajax";
+                    }
+                })
+                .then(function(texto) {
+                    console.log(texto);
+                })
+                .catch(function(err) {
+                    console.log(err);
+                });
+                _.delay(function() {
+                    actualizarTablaInscripciones();
+                },RELOAD_TIME);
             }
 
             function traerCursosColocarlosEnSelect() {
@@ -143,7 +172,7 @@
                 fetch(url)
                 .then(response => response.json())
                 .then(arrCrs => { console.log(arrCrs); 
-                    let strOpt = '{{#arr}}<option value="{{nombre}}">{{id}}</option>{{/arr}}">';
+                    let strOpt =  $('#mjs-curso')[0].innerHTML;
                     let resHTML = Mustache.render(strOpt, { arr: arrCrs});
                     console.log(resHTML);
                     $('#selCursos').children().detach();
@@ -152,12 +181,83 @@
             }
 
             function traerUsuariosColocarEnLosSelect() {
+                let url = 'usuario';
+                fetch(url)
+                .then(response => response.json())
+                .then(arrUsers => { console.log(arrUsers); 
+                    let strOpt = $('#mjs-usuario')[0].innerHTML;
+                    let resHTML = Mustache.render(strOpt, { arr: arrUsers});
+                    console.log(resHTML);
+                    $('#selUsuarios').children().detach();
+                    $('#selUsuarios').append(resHTML);
+                });
+            }
 
+            function actualizarTablaInscripciones() {
+                let tmplFila = '{{#arr}}' + '<tr>' +
+                                '<td>{{idInscripcion}}</td>' +
+                                '<td>{{nombreCurso}}</td>' +
+                                '<td>{{nombreUsuario}}</td>' +
+                                '<th scope="col">' +
+                                    '<button id="cuarto" type="button" data-idIn="{{idInscripcion}}"' +
+                                        'class="btn btn-danger js-borrar">Borrar</button>' +
+                                '</th>' +
+                              '</tr>' + '{{/arr}}';
+
+                let tmplMustache = $('#mjs-tablerows')[0].innerHTML;
+
+                fetch('inscripciones', {
+                    method: 'GET'
+                })
+                .then(function(response) {
+                    if(response.ok) {
+                        return response.json();
+                    } else {
+                        throw "Error en la llamada Ajax";
+                    }
+                })
+                .then(function(resp) {
+                    console.log(resp);
+                    let obj = { arr : resp };
+                    let htmlFinal = Mustache.render(tmplMustache, obj);
+                    // _.map($('.js-idinscripcion'), z => $(z).data('idin') );
+                    /* tomar estos datos por cada elemento del array
+                    idCurso: "3c12e417-848a-42db-9898-cfd148fa8302"
+                    idInscripcion: "9ab4eca0-00e1-4f4a-bf02-704125e8a81d"
+                    idUsuario: "2e8cc669-4adc-4dc0-ac3b-aabeb7daf149"
+                    nombreCurso: "Curso de Liderazgo"
+                    nombreUsuario: "Ivan"
+                    */
+                    // tengo el template
+                    // tengo la resp en formato json
+                    // mustache.render -> apppend()
+                    $('#cuerpoDeLaTabla').children().detach();
+                    $('#cuerpoDeLaTabla').append(htmlFinal);    
+                })
+                .catch(function(err) {
+                    console.log(err);
+                });
+            }
+
+            function borrarInscripcion(idInscripcion) {
+                console.log('borrar inscripcion de id: ' + idInscripcion);
+                fetch(`inscripciones/${idInscripcion}`, {
+                    method: 'DELETE'
+                })
+                    .then(function(response) {
+                    if(response.ok == false) {
+                        throw "Error en la llamada Ajax";
+                    }
+                });
+                _.delay(function() {
+                    actualizarTablaInscripciones();
+                },RELOAD_TIME);
             }
 
             _.delay( z => {
                 traerCursosColocarlosEnSelect();
                 traerUsuariosColocarEnLosSelect();
+                actualizarTablaInscripciones();
             }, 100);
 
         </script>
