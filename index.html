@@ -129,6 +129,8 @@
 
 
         <script>
+            const authHeaders = new Headers();
+            authHeaders.append('authorization', 'Basic x x');
             const RELOAD_TIME = 300;
             $(document).on('click', '#agregarUsuarioCurso', function(e) {
                 console.log(document.getElementById("selCursos").value);
@@ -144,6 +146,7 @@
             function asociarUsuarioCurso(idUsuario, idCurso) {
                 fetch('inscripciones', {
                     method: 'POST',
+                    headers: authHeaders,
                     body: JSON.stringify({
                         curso : idCurso,
                         usuario : idUsuario
@@ -169,7 +172,9 @@
 
             function traerCursosColocarlosEnSelect() {
                 let url = 'curso';
-                fetch(url)
+                fetch(url, {
+                    headers: authHeaders
+                })
                 .then(response => response.json())
                 .then(arrCrs => { console.log(arrCrs); 
                     let strOpt =  $('#mjs-curso')[0].innerHTML;
@@ -182,7 +187,9 @@
 
             function traerUsuariosColocarEnLosSelect() {
                 let url = 'usuario';
-                fetch(url)
+                fetch(url, {
+                    headers: authHeaders,
+                })
                 .then(response => response.json())
                 .then(arrUsers => { console.log(arrUsers); 
                     let strOpt = $('#mjs-usuario')[0].innerHTML;
@@ -207,7 +214,8 @@
                 let tmplMustache = $('#mjs-tablerows')[0].innerHTML;
 
                 fetch('inscripciones', {
-                    method: 'GET'
+                    method: 'GET',
+                    headers: authHeaders
                 })
                 .then(function(response) {
                     if(response.ok) {
@@ -242,7 +250,8 @@
             function borrarInscripcion(idInscripcion) {
                 console.log('borrar inscripcion de id: ' + idInscripcion);
                 fetch(`inscripciones/${idInscripcion}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: authHeaders
                 })
                     .then(function(response) {
                     if(response.ok == false) {
